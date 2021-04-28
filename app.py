@@ -25,7 +25,7 @@ if __name__ == "__main__":
     try:
         if opts['-a']:
             Skill(opts['<skill_name>'])
-        if opts['<skill_name>'] is None or Skill.skill_exists(opts['<skill_name>']):
+        elif opts['<skill_name>'] is None or Skill.skill_exists(opts['<skill_name>']):
             if opts['-u']:
                 Skill(opts['<skill_name>']).add_stats()
             elif opts['-r']:

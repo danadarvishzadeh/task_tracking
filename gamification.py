@@ -46,7 +46,7 @@ def make_bar(key, value):
     bar = ('%').join([str(value), bar])
     if value != 100:
         bar = ' ' + bar
-    return f"{key} {(15-len(key))*'-'} {bar}"
+    return f"{key} {(20-len(key))*'-'} {bar}"
 
 def prepreation():
     global skills
