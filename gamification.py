@@ -1,58 +1,19 @@
-import csv
 import sqlite3
 from sqlite3 import Error
 
-from consts import *
+import utils
+from consts import INTERVAL
 from queries import *
+from utils import create_database, create_tables, get_input, make_bar
 
 
-def get_input(input_text=''):
-    text = ''
-    while True:
-        new_line = input(input_text)
-        if new_line == 'q':
-            break
-        text = "\n".join((text, new_line))
-    return text
-
-def create_database():
-    global cursor, connection
-    connection = None
-    cursor = None
-    try:
-        connection = sqlite3.connect(DB_NAME)
-        cursor = connection.cursor()
-    except Error as e:
-        print(e)
-    finally:
-        if connection is None:
-            raise Exception('connection did not established.')
-        if cursor is None:
-            raise Exception('cursor did not set.')
-
-def create_tables(create_table_sql):
-    try:
-        cursor.execute(create_table_sql)
-    except Error as e:
-        print(e)
-
-def make_bar(key, value):
-    bar = ((5-len(str(value)))//2)*' ' + '|' + ((value//INTERVAL)-1)*'='
-    if value == 100:
-        bar += '='
-    elif value > 0:
-        bar += '»'
-    bar += ((100-value)//INTERVAL)*' ' + '|'
-    bar = ('%').join([str(value), bar])
-    if value != 100:
-        bar = ' ' + bar
-    return f"{key} {(20-len(key))*'-'} {bar}"
 
 def prepreation():
+    global connection, cursor
     global skills
-    create_database()
+    connection, cursor = create_database()
     for query in CREATING_TABLE_QUERIES:
-        create_tables(query)
+        create_tables(cursor, query)
     skills = Skill.get_all_skills()
 
 def flush():
@@ -60,13 +21,16 @@ def flush():
     connection.commit()
     skills = Skill.get_all_skills()
 
-
 class Skill:
 
     def __init__(
         self,
-        name):
+        name,
+        total=None,
+        interval=None):
         self.name = name
+        self.total = total
+        self.interval = interval
         self.notes = list()
         self.steps = list()
         self.number_of_steps = None
@@ -79,12 +43,14 @@ class Skill:
     def load_or_create(self):
         try:
             if self.name not in skills:
-                cursor.execute(INSERT_INTO_SKILLS, (self.name,))
+                cursor.execute(INSERT_INTO_SKILLS, (self.name, self.total, self.interval))
                 connection.commit()
             cursor.execute(SELECT_FROM_SKILLS, (self.name,))
             (
                 self.stats,
                 self.number_of_steps,
+                self.total,
+                self.interval,
             ) = cursor.fetchone()
             self.load_url()
             self.load_notes()
@@ -126,9 +92,13 @@ class Skill:
     def rename(self, new_name):
         cursor.execute(UPDATE_RENAME_SKILLS, (new_name, self.name))
 
-    def add_stats(self):
+    def add_stats(self, progress=None):
         if self.stats < 100:
-            self.stats += INTERVAL
+            if progress is not None:
+                self.stats += int(((int(progress) / self.total)*100))
+            else:
+                self.stats += int(((self.interval / self.total)*100))
+            self.stats = min(self.stats, 100)
             cursor.execute(UPDATE_STATS_SKILLS, (self.stats, self.name))
 
     def add_url(self, url):
@@ -142,20 +112,27 @@ class Skill:
 
     def show_url(self):
         if self.url is not None:
-            print(self.url, end='\n\n')
+            print(self.url)
         else:
-            print('this skill does not have a reference url.')
+            print('\nthis skill does not have a reference url.')
 
     def show_notes(self):
         for note in self.notes:
-            print(note.show(), end='\n\n')
+            print(note.show())
 
     def show_details(self):
         bar = make_bar(self.name, self.stats)
-        print(bar, end='\n***********\n')
+        print(bar)
         for note in self.notes:
             note.show()
-        print('\n***********\n')
+        each_update = int(((self.interval / self.total)*100))
+        total_updates = 100 // each_update
+        if 100 % each_update != 0:
+            total_updates += 1
+        print(f'Interval: {self.interval}')
+        print(f'Total: {self.total}')
+        print(f'Each Update: {each_update}')
+        print(f'Total Updates: {total_updates}')
         for step in self.steps:
             step.show()
 
@@ -209,22 +186,20 @@ class Step:
             url,))
 
     def show(self):
-        print(self.step_order)
-        print(self.objective, end='\n\n')
+        print(f'Step Order: {self.step_order}')
+        print(f'Objective: {self.objective}')
         if self.url != 'NULL':
-            print(self.url)
+            print(f'url: {self.url}')
 
     @staticmethod
     def define_steps(skill_name, number_of_steps):
         for i in range(number_of_steps):
-            print(f'objective for step number {i}')
+            print(f'\nobjective for step number {i}\n')
             objective = get_input()
             cursor.execute(INSERT_INTO_STEPS, (skill_name, i, objective))
             connection.commit()
         cursor.execute(UPDATE_STEPS_SKILLS, (skill_name, number_of_steps))
 
-    # def set_url(self, url):
-    #     cursor.execute(SET_URL, (url, self.skill_id, self.id))
 
 class Note:
 
@@ -236,7 +211,7 @@ class Note:
         self.text = text
     
     def show(self):
-        return f"id:{self.note_id}{self.text}"
+        return f"id: {self.note_id}{self.text}"
 
     @staticmethod
     def define_note(skill_name, text):

@@ -1,7 +1,7 @@
 """Usage:
     gamified_life
-    gamified_life -a <skill_name>
-    gamified_life -u <skill_name>
+    gamified_life --add <skill_name>
+    gamified_life -u <skill_name> [<progress>]
     gamified_life -r <skill_name>
     gamified_life --steps <skill_name> <steps>
     gamified_life --show [<skill_name>]
@@ -9,8 +9,8 @@
     gamified_life --anote <skill_name>
     gamified_life --notes <skill_name>
     gamified_life --rnote <note_id>
-    gamified_life --aurl <skill_name> <url>
     gamified_life --aurl --steps <skill_name> <step_order> <url>
+    gamified_life --aurl <skill_name> <url>
     gamified_life --surl <skill_name>
     
 """
@@ -23,11 +23,24 @@ opts = docopt(__doc__, help=True, version='v0.1')
 if __name__ == "__main__":
     prepreation()
     try:
-        if opts['-a']:
-            Skill(opts['<skill_name>'])
+        if opts['--add'] and Skill.skill_exists(opts['<skill_name>']):
+            print('\nthis skill exists.\n')
+        elif opts['--add']:
+            total = int(input('\nEnter total amount of steps:\n'))
+            interval = int(input('\nEnter the interval:\n'))
+            q_steps = input('\nDo you want to define steps?(y or n)\n')
+            while q_steps not in ('y', 'n'):
+                q_steps = input('\nDo you want to define steps(y or n)?\n')
+            Skill(opts['<skill_name>'], total, interval)
+            if q_steps == 'y':
+                steps = input('\nEnter number of steps:\n')
+                Step.define_steps(opts['<skill_name>'], int(steps))
         elif opts['<skill_name>'] is None or Skill.skill_exists(opts['<skill_name>']):
             if opts['-u']:
-                Skill(opts['<skill_name>']).add_stats()
+                if opts['<progress>']:
+                    Skill(opts['<skill_name>']).add_stats(opts['<progress>'])
+                else:
+                    Skill(opts['<skill_name>']).add_stats()
             elif opts['-r']:
                 Skill.delete_skill(opts['<skill_name>'])
             elif opts['--show']:
@@ -35,12 +48,12 @@ if __name__ == "__main__":
                     Skill(opts['<skill_name>']).show_details()
                 else:
                     Skill.show_skills()
-            elif opts['--steps']:
-                Step.define_steps(opts['<skill_name>'], int(opts['<steps>']))
             elif opts['--rename']:
                 Skill(opts['<old_skill_name>']).rename(opts['<new_skill_name>'])
             elif opts['--aurl'] and opts['--steps']:
-                Skill(opts['<skill_name>']).add_step_url(opts['<step_order>'], opts['url'])
+                Skill(opts['<skill_name>']).add_step_url(int(opts['<step_order>']), opts['<url>'])
+            elif opts['--steps']:
+                Step.define_steps(opts['<skill_name>'], int(opts['<steps>']))
             elif opts['--aurl']:
                 Skill(opts['<skill_name>']).add_url(opts['<url>'])
             elif opts['--surl']:
@@ -55,14 +68,12 @@ if __name__ == "__main__":
             else:
                 Skill.show_skills()
         else:
-            print('you must first add this skill.')
+            print('\nyou must first add this skill.\n')
     except Exception as e:
-        print('opt failure or app error', str(e.args))
+        print('\nopt failure or app error\n', e, '\n')
     finally:
         try:
             flush()
-            # skills = Skill.get_all_skills()
-            # Skill.show_skills()
         except Exception as e:
-            print('app failed to start.', e.args)
+            print('\napp failed to start.', e.args, '\n')
 

@@ -10,13 +10,15 @@ _CREATING_TABLE_SKILLS = """
         skill_id INTEGER PRIMARY KEY,
         name TEXT NOT NULL UNIQUE,
         stats INTEGER DEFAULT 0,
-        steps INTEGER DEFAULT 0);
+        steps INTEGER DEFAULT 0,
+        total INTEGER NOT NULL,
+        interval INTEGER NOT NULL);
 """
 
 INSERT_INTO_SKILLS = """
     INSERT
-        INTO skills(name)
-        VALUES(?)
+        INTO skills(name, total, interval)
+        VALUES(?, ?, ?)
 """
 
 SELECT_ALL_SKILLS = """
@@ -25,7 +27,7 @@ SELECT_ALL_SKILLS = """
 """
 
 SELECT_FROM_SKILLS = """
-    SELECT stats, steps
+    SELECT stats, steps, total, interval
         FROM skills
     WHERE name=?
 """
@@ -74,32 +76,13 @@ INSERT_INTO_STEPS = """
                 WHERE name=?),?,?)
 """
 
-# SELECT_FROM_STEPS = """
-#     SELECT name, step_order, objective, url
-#         FROM steps
-#         JOIN skills
-#         USING(SELECT skill_id
-#                 FROM skills
-#             WHERE name=?)
-#         JOIN urls
-#         USING(step_id,
-#             (SELECT skill_id
-#                 FROM skills
-#             WHERE name=?))
-#     WHERE skill_id=(
-#         SELECT skill_id
-#             FROM skills
-#         WHERE name=?)
-# """
-
 SELECT_FROM_STEPS = """
-    SELECT name, step_order, objective, url
-    FROM skills
-    JOIN steps
-        USING(skill_id)
-    JOIN urls
-        USING(skill_id)
-    WHERE name=?
+    SELECT name, st.step_order, st.objective, u.url
+    FROM skills sk
+    JOIN steps st ON sk.skill_id=st.skill_id
+	LEFT JOIN urls u ON u.skill_id=sk.skill_id AND u.step_id=st.step_id
+	WHERE name=?
+    ORDER BY st.step_order
 """
 
 _CREATING_TABLE_NOTES = """
@@ -141,6 +124,7 @@ _CREATING_TABLE_URLS = """
         skill_id INTEGER NOT NULL,
         step_id INTEGER,
         url TEXT NOT NULL,
+        UNIQUE(skill_id, step_id)
         FOREIGN KEY (skill_id)
             REFERENCES skills (skill_id)
                 ON DELETE CASCADE
