@@ -77,12 +77,13 @@ INSERT_INTO_STEPS = """
 """
 
 SELECT_FROM_STEPS = """
-    SELECT name, st.step_order, st.objective, u.url
-    FROM skills sk
-    JOIN steps st ON sk.skill_id=st.skill_id
-	LEFT JOIN urls u ON u.skill_id=sk.skill_id AND u.step_id=st.step_id
-	WHERE name=?
-    ORDER BY st.step_order
+    SELECT name, step_order, objective, url
+    FROM skills
+    JOIN steps
+        USING(skill_id)
+    JOIN urls
+        USING(skill_id)
+    WHERE name=?
 """
 
 _CREATING_TABLE_NOTES = """
@@ -124,7 +125,6 @@ _CREATING_TABLE_URLS = """
         skill_id INTEGER NOT NULL,
         step_id INTEGER,
         url TEXT NOT NULL,
-        UNIQUE(skill_id, step_id)
         FOREIGN KEY (skill_id)
             REFERENCES skills (skill_id)
                 ON DELETE CASCADE

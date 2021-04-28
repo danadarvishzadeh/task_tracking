@@ -95,10 +95,9 @@ class Skill:
     def add_stats(self, progress=None):
         if self.stats < 100:
             if progress is not None:
-                self.stats += int(((int(progress) / self.total)*100))
+                self.stats += abs(((int(progress) / self.total)*100))
             else:
-                self.stats += int(((self.interval / self.total)*100))
-            self.stats = min(self.stats, 100)
+                self.stats += abs(((self.interval / self.total)*100))
             cursor.execute(UPDATE_STATS_SKILLS, (self.stats, self.name))
 
     def add_url(self, url):
@@ -112,29 +111,23 @@ class Skill:
 
     def show_url(self):
         if self.url is not None:
-            print(self.url)
+            print(self.url, end='\n\n')
         else:
             print('\nthis skill does not have a reference url.')
 
     def show_notes(self):
         for note in self.notes:
-            print(note.show())
+            print(note.show(), end='\n\n')
 
     def show_details(self):
         bar = make_bar(self.name, self.stats)
-        print(bar)
+        print(bar, end='\n\n------------\n')
         for note in self.notes:
             note.show()
-        each_update = int(((self.interval / self.total)*100))
-        total_updates = 100 // each_update
-        if 100 % each_update != 0:
-            total_updates += 1
-        print(f'Interval: {self.interval}')
-        print(f'Total: {self.total}')
-        print(f'Each Update: {each_update}')
-        print(f'Total Updates: {total_updates}')
+        print('\n------------\n')
         for step in self.steps:
             step.show()
+        print(f"update steps:{self.interval}")
 
 ################ STATIC METHODS ################
 
@@ -186,10 +179,10 @@ class Step:
             url,))
 
     def show(self):
-        print(f'Step Order: {self.step_order}')
-        print(f'Objective: {self.objective}')
-        if self.url != 'NULL':
-            print(f'url: {self.url}')
+        print(self.step_order)
+        print(self.objective, end='\n\n')
+        if self.url != 'NULL' and self.url is not None:
+            print(self.url)
 
     @staticmethod
     def define_steps(skill_name, number_of_steps):
@@ -200,6 +193,8 @@ class Step:
             connection.commit()
         cursor.execute(UPDATE_STEPS_SKILLS, (skill_name, number_of_steps))
 
+    # def set_url(self, url):
+    #     cursor.execute(SET_URL, (url, self.skill_id, self.id))
 
 class Note:
 
@@ -211,7 +206,7 @@ class Note:
         self.text = text
     
     def show(self):
-        return f"id: {self.note_id}{self.text}"
+        return f"\nid:{self.note_id}{self.text}"
 
     @staticmethod
     def define_note(skill_name, text):
