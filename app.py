@@ -1,56 +1,68 @@
-import getopt
-import os
-import sys
-import docopt
-from gamification import Skill, prepreation, flush
+"""Usage:
+    gamified_life
+    gamified_life -a <skill_name>
+    gamified_life -u <skill_name>
+    gamified_life -r <skill_name>
+    gamified_life --steps <skill_name> <steps>
+    gamified_life --show [<skill_name>]
+    gamified_life --rename <old_skill_name> <new_skill_name>
+    gamified_life --anote <skill_name>
+    gamified_life --notes <skill_name>
+    gamified_life --rnote <note_id>
+    gamified_life --aurl <skill_name> <url>
+    gamified_life --aurl --steps <skill_name> <step_order> <url>
+    gamified_life --surl <skill_name>
+    
+"""
+from docopt import docopt
+
+from gamification import Note, Skill, Step, flush, get_input, prepreation
+
+opts = docopt(__doc__, help=True, version='v0.1')
 
 if __name__ == "__main__":
     prepreation()
-    argument_list = sys.argv[1:]
-    options = 'ha:u:r:'
-    long_options = [
-        'rename',
-        'anote=',
-        'notes=',
-        'rnote=',
-        'aurl=',
-        'surl=',
-    ]
     try:
-        arguments, values = getopt.getopt(argument_list, options, long_options)
-        for current_argument, current_value in arguments:
-            if current_argument in ('-h'):
-                print('-a for adding skills\n-u for updating a skill\n-s for showing progress\n-r for removing skill')
-            elif current_argument == '-a':
-                Skill(current_value)
-            elif current_argument == '-u':
-                Skill(current_value).add_stat()
-            elif current_argument == '-r':
-                Skill.remove_skill(current_value)
-            elif current_argument == '--rename':
-                Skill.rename(values)
-            elif current_argument == '--aurl':
-                Skill(current_value).set_url(values[0])
-            elif current_argument == '--surl':
-                Skill(current_value).show_url()
-            elif current_argument == '--anote':
-                note = ''
-                while True:
-                    new_line = input()
-                    if new_line == 'q':
-                        break
-                    note = "\n".join((note, new_line))
-                Skill(current_value).add_note(note)
-            elif current_argument == '--notes':
-                Skill(current_value).show_notes()
-            elif current_argument == '--rnote':
-                Skill.delete_note(current_value)
-    except getopt.error as err:
-        print('opt faliure', str(err))
+        if opts['-a']:
+            Skill(opts['<skill_name>'])
+        if opts['<skill_name>'] is None or Skill.skill_exists(opts['<skill_name>']):
+            if opts['-u']:
+                Skill(opts['<skill_name>']).add_stats()
+            elif opts['-r']:
+                Skill.delete_skill(opts['<skill_name>'])
+            elif opts['--show']:
+                if opts['<skill_name>']:
+                    Skill(opts['<skill_name>']).show_details()
+                else:
+                    Skill.show_skills()
+            elif opts['--steps']:
+                Step.define_steps(opts['<skill_name>'], int(opts['<steps>']))
+            elif opts['--rename']:
+                Skill(opts['<old_skill_name>']).rename(opts['<new_skill_name>'])
+            elif opts['--aurl'] and opts['--steps']:
+                Skill(opts['<skill_name>']).add_step_url(opts['<step_order>'], opts['url'])
+            elif opts['--aurl']:
+                Skill(opts['<skill_name>']).add_url(opts['<url>'])
+            elif opts['--surl']:
+                Skill(opts['<skill_name>']).show_url()
+            elif opts['--notes']:
+                Skill(opts['<skill_name>']).show_notes()
+            elif opts['--rnote']:
+                Note.delete_note(opts['<note_id>'])
+            elif opts['--anote']:
+                note = get_input()
+                Note.define_note(opts['<skill_name>'], note)
+            else:
+                Skill.show_skills()
+        else:
+            print('you must first add this skill.')
+    except Exception as e:
+        print('opt failure or app error', str(e.args))
     finally:
         try:
             flush()
-            skills = Skill.get_all_skills()
-            Skill.show_skills()
+            # skills = Skill.get_all_skills()
+            # Skill.show_skills()
         except Exception as e:
-            print('app failed.', e)
+            print('app failed to start.', e.args)
+
