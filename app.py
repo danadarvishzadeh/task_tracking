@@ -76,4 +76,3 @@ if __name__ == "__main__":
             flush()
         except Exception as e:
             print('\napp failed to start.', e.args, '\n')
-
