@@ -5,13 +5,25 @@ from consts import *
 from queries import CREATING_TABLE_QUERIES
 
 
-def get_input(input_text=''):
+def get_input(conn, input_text='' , multi=False, integer=False):
     text = ''
     while True:
-        new_line = input('\n'+input_text)
+        if conn is not None:
+            conn.sendall(input_text.encode('utf-8'))
+            new_line = conn.recv(1024).decode('utf-8')
+        else:
+            new_line = input('\n'+input_text)
         if new_line == 'q':
             break
+        if not multi:
+            text += new_line
+            break
         text = "\n".join((text, new_line))
+    if integer:
+        try:
+            text = int(text)
+        except:
+            return 'This is not a fucking integer. With love.'
     return text
 
 def create_database():
@@ -22,18 +34,19 @@ def create_database():
         cursor = connection.cursor()
         return connection, cursor
     except Error as e:
-        print(e)
+        err = ''
+        err += str(e)
         if connection is None:
-            print(' did not established.')
+            err += '\nconnection did not established.'
         if cursor is None:
-            print('cursor did not set.')
-        exit()
+            err += '\ncursor did not set.'
+        raise Exception(err)
 
 def create_tables(cursor, create_table_sql):
     try:
         cursor.execute(create_table_sql)
     except Error as e:
-        print(e)
+        return str(e)
 
 def make_bar(key, value):
     bar_part_one = ((5-len(str(value)))//2)*' '
