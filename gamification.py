@@ -125,7 +125,7 @@ class Skill:
 
     def show_notes(self):
         for note in self.notes:
-            self.buffer += note.show() + '\n\n'
+            self.buffer += '\n' + note.show() + '\n\n'
 
     def show_details(self):
         bar = make_bar(self.name, self.stats)
