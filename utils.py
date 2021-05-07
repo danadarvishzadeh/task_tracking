@@ -12,7 +12,12 @@ def get_input(conn, input_text='' , multi=False, integer=False):
             conn.sendall(input_text.encode('utf-8'))
             new_line = conn.recv(1024).decode('utf-8')
         else:
-            new_line = input('\n'+input_text)
+            try:
+                new_line = input('\n'+input_text)
+            except KeyboardInterrupt:
+                pass
+            except:
+                pass
         if new_line == 'q':
             break
         if not multi:
