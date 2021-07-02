@@ -2,7 +2,7 @@ import sqlite3
 from sqlite3 import Error
 
 from consts import *
-from queries import CREATING_TABLE_QUERIES
+from queries import CREATING_TABLE_QUERIES, SELECT_ALL_TABLES
 
 
 def get_input(conn, input_text='' , multi=False, integer=False):
@@ -66,4 +66,3 @@ def make_bar(key, value):
     if value != 100:
         bar = ' ' + bar
     return f"{key} {(20-len(key))*'-'} {bar}"
-

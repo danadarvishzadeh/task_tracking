@@ -320,7 +320,10 @@ class TaskApp:
                     note = get_input(conn=self.conn, multi=True)
                     Note.define_note(opts['<skill_name>'], note)
                 else:
-                    self.buffer += Skill.show_skills()
+                    if Skill.show_skills() is not None:
+                        self.buffer += Skill.show_skills()
+                    else:
+                        self.buffer += self.doc
             else:
                 self.buffer += '\nyou must first add this skill.\n'
         except Exception as e:

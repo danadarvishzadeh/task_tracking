@@ -1,9 +1,4 @@
-# CREATING_COLLECTIONS_TABLE = """
-#     CREATE TABLE IF NOT EXISTS collections(
-#         collection_id INTEGER PRIMARY KEY,
-#         name TEXT NOT NULL,
-#     );
-# """
+################ SKILLS ################
 
 _CREATING_TABLE_SKILLS = """
     CREATE TABLE IF NOT EXISTS skills(
@@ -12,7 +7,7 @@ _CREATING_TABLE_SKILLS = """
         stats INTEGER DEFAULT 0,
         steps INTEGER DEFAULT 0,
         total INTEGER NOT NULL,
-        interval INTEGER NOT NULL);
+        interval INTEGER NOT NULL)
 """
 
 INSERT_INTO_SKILLS = """
@@ -55,6 +50,8 @@ DELETE_FROM_SKILLS = """
     WHERE name=?
 """
 
+################ STEPS ################
+
 _CREATING_TABLE_STEPS = """
     CREATE TABLE IF NOT EXISTS steps(
         step_id INTEGER PRIMARY KEY,
@@ -64,7 +61,7 @@ _CREATING_TABLE_STEPS = """
         FOREIGN KEY (skill_id)
             REFERENCES skills (skill_id)
                 ON DELETE CASCADE
-                ON UPDATE NO ACTION);
+                ON UPDATE NO ACTION)
 """
 
 INSERT_INTO_STEPS = """
@@ -86,6 +83,8 @@ SELECT_FROM_STEPS = """
     WHERE name=?
 """
 
+################ NOTES ################
+
 _CREATING_TABLE_NOTES = """
     CREATE TABLE IF NOT EXISTS notes(
         note_id INTEGER PRIMARY KEY,
@@ -94,7 +93,7 @@ _CREATING_TABLE_NOTES = """
         FOREIGN KEY (skill_id)
             REFERENCES skills (skill_id)
                 ON DELETE CASCADE
-                ON UPDATE NO ACTION);
+                ON UPDATE NO ACTION)
 """
 
 INSERT_INTO_NOTES = """
@@ -119,6 +118,8 @@ DELETE_FROM_NOTES = """
     WHERE note_id=?
 """
 
+################ URLS ################
+
 _CREATING_TABLE_URLS = """
     CREATE TABLE IF NOT EXISTS urls(
         url_id INTEGER PRIMARY KEY,
@@ -132,7 +133,7 @@ _CREATING_TABLE_URLS = """
         FOREIGN KEY (step_id)
             REFERENCES steps (step_id)
                 ON DELETE CASCADE
-                ON UPDATE NO ACTION);
+                ON UPDATE NO ACTION)
 """
 
 INSERT_INTO_URLS = """
@@ -158,8 +159,9 @@ SELECT_SKILL_URLS = """
         AND step_id is NULL
 """
 
+################ CREATE TABLES ################
+
 CREATING_TABLE_QUERIES = [
-    # CREATING_COLLECTIONS_TABLE,
     _CREATING_TABLE_SKILLS,
     _CREATING_TABLE_NOTES,
     _CREATING_TABLE_STEPS,
